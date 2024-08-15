@@ -6,6 +6,8 @@ import (
 	"startup-crowdfunding-backend/auth"
 	"startup-crowdfunding-backend/helper"
 	"startup-crowdfunding-backend/user"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -144,7 +146,8 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 
 	currentUser := c.MustGet("currentUser").(user.User)
 	userID := currentUser.ID
-	path := "images/avatars/" + fmt.Sprintf("%d-%s", userID, file.Filename)
+	extension := strings.Split(file.Filename, ".")[1]
+	path := fmt.Sprintf("images/users/%d/avatars/%d.%s", userID, time.Now().Unix(), extension)
 
 	err = c.SaveUploadedFile(file, path)
 	if err != nil {
