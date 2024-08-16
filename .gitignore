@@ -24,3 +24,5 @@ go.work.sum
 .vscode
 
 images
+
+config.json

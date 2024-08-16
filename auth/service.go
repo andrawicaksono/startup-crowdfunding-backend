@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/spf13/viper"
 )
 
 type Service interface {
@@ -13,14 +14,19 @@ type Service interface {
 }
 
 type service struct {
+	SECRET_KEY                []byte
+	LOGIN_EXPIRATION_DURATION time.Duration
 }
 
-func NewService() *service {
-	return &service{}
-}
+func NewService(viper *viper.Viper) *service {
+	secretKey := viper.GetString("jwt.secret_key")
+	loginExpirationDuration := viper.GetInt("jwt.login_expiration_duration")
 
-var SECRET_KEY = []byte("BWASTARTUP_s3C23t_K3y")
-var LOGIN_EXPIRATION_DURATION = time.Duration(15) * time.Minute
+	SECRET_KEY := []byte(secretKey)
+	LOGIN_EXPIRATION_DURATION := time.Duration(loginExpirationDuration) * time.Minute
+
+	return &service{SECRET_KEY, LOGIN_EXPIRATION_DURATION}
+}
 
 func (s *service) GenerateToken(userID int) (string, error) {
 	type MyClaims struct {
@@ -30,14 +36,14 @@ func (s *service) GenerateToken(userID int) (string, error) {
 
 	claims := MyClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(LOGIN_EXPIRATION_DURATION)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.LOGIN_EXPIRATION_DURATION)),
 		},
 		UserID: userID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString(SECRET_KEY)
+	signedToken, err := token.SignedString(s.SECRET_KEY)
 	if err != nil {
 		return signedToken, err
 	}
@@ -54,7 +60,7 @@ func (s *service) ValidateToken(tokenString string) (*jwt.Token, error) {
 			return nil, errors.New("invalid token")
 		}
 
-		return []byte(SECRET_KEY), nil
+		return s.SECRET_KEY, nil
 	})
 
 	if err != nil {
