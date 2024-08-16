@@ -1,6 +1,13 @@
 package helper
 
-import "github.com/go-playground/validator/v10"
+import (
+	"fmt"
+	"time"
+
+	"math/rand"
+
+	"github.com/go-playground/validator/v10"
+)
 
 type Meta struct {
 	Message string `json:"message"`
@@ -36,4 +43,17 @@ func FormatValidationError(err error) []string {
 	}
 
 	return errors
+}
+
+func GenerateTransactionCode(length int) string {
+	const charset = "0123456789"
+	var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+
+	code := fmt.Sprintf("TRX%s", string(b))
+	return code
 }

@@ -3,11 +3,13 @@ package transaction
 import (
 	"errors"
 	"startup-crowdfunding-backend/campaign"
+	"startup-crowdfunding-backend/helper"
 )
 
 type Service interface {
 	GetTransactionsByCampaignID(input GetTransactionsByCampaignIDInput) ([]Transaction, error)
 	GetTransactionsByUserID(userID int) ([]Transaction, error)
+	CreateTransaction(input CreateTransactionInput) (Transaction, error)
 }
 
 type service struct {
@@ -46,4 +48,30 @@ func (s *service) GetTransactionsByUserID(userID int) ([]Transaction, error) {
 	}
 
 	return transactions, nil
+}
+
+func (s *service) CreateTransaction(input CreateTransactionInput) (Transaction, error) {
+	transaction := Transaction{}
+	campaign, err := s.campaignRepository.FindByID(input.CampaignID)
+	if err != nil {
+		return transaction, err
+	}
+
+	if campaign.ID == 0 {
+		return transaction, errors.New("no campaign found on that ID")
+	}
+
+	transaction.UserID = input.User.ID
+	transaction.CampaignID = campaign.ID
+	transaction.Amount = input.Amount
+	transaction.Status = "pending"
+	transaction.Code = helper.GenerateTransactionCode(6)
+
+	newTransaction, err := s.repository.Save(transaction)
+	if err != nil {
+		return transaction, err
+	}
+
+	return newTransaction, nil
+
 }
