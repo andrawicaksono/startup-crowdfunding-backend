@@ -11,4 +11,10 @@
     "secret_key": "",
     "login_expiration_duration": 15
   }
+
+  "midtrans": {
+    "merchant_id": "",
+    "client_key": "",
+    "server_key": ""
+  }
 }
