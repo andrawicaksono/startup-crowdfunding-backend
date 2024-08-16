@@ -66,9 +66,8 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&input)
 	if err != nil {
-		// errors := helper.FormatValidationError(err)
-		// errorMessage := gin.H{"errors": errors}
-		errorMessage := gin.H{"errors": err.Error()}
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
 
 		response := helper.APIResponse("Create transaction failed", http.StatusBadRequest, "error", errorMessage)
 		c.JSON(http.StatusBadRequest, response)
@@ -79,7 +78,7 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 
 	input.User = currentUser
 
-	transaction, err := h.transactionService.CreateTransaction(input)
+	newTransaction, err := h.transactionService.CreateTransaction(input)
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 
@@ -88,6 +87,7 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	response := helper.APIResponse("Create transaction success", http.StatusCreated, "success", transaction)
+	formatter := transaction.FormatTransaction(newTransaction)
+	response := helper.APIResponse("Create transaction success", http.StatusCreated, "success", formatter)
 	c.JSON(http.StatusCreated, response)
 }
