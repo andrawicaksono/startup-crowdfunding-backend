@@ -4,6 +4,7 @@ import (
 	"errors"
 	"startup-crowdfunding-backend/campaign"
 	"startup-crowdfunding-backend/helper"
+	"startup-crowdfunding-backend/payment"
 )
 
 type Service interface {
@@ -15,10 +16,11 @@ type Service interface {
 type service struct {
 	repository         Repository
 	campaignRepository campaign.Repository
+	paymentService     payment.Service
 }
 
-func NewService(repository Repository, campaignRepository campaign.Repository) *service {
-	return &service{repository, campaignRepository}
+func NewService(repository Repository, campaignRepository campaign.Repository, paymentService payment.Service) *service {
+	return &service{repository, campaignRepository, paymentService}
 }
 
 func (s *service) GetTransactionsByCampaignID(input GetTransactionsByCampaignIDInput) ([]Transaction, error) {
@@ -69,9 +71,25 @@ func (s *service) CreateTransaction(input CreateTransactionInput) (Transaction, 
 
 	newTransaction, err := s.repository.Save(transaction)
 	if err != nil {
+		return newTransaction, err
+	}
+
+	paymentTransaction := payment.Transaction{
+		Code:   transaction.Code,
+		Amount: transaction.Amount,
+	}
+
+	paymentURL, err := s.paymentService.GetPaymentURL(paymentTransaction, input.User)
+	if err != nil {
 		return transaction, err
 	}
 
-	return newTransaction, nil
+	newTransaction.PaymentURL = paymentURL
 
+	updatedTransaction, err := s.repository.Update(newTransaction)
+	if err != nil {
+		return updatedTransaction, err
+	}
+
+	return updatedTransaction, nil
 }

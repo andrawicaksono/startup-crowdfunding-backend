@@ -7,6 +7,7 @@ import (
 	"startup-crowdfunding-backend/config"
 	"startup-crowdfunding-backend/handler"
 	"startup-crowdfunding-backend/helper"
+	"startup-crowdfunding-backend/payment"
 	"startup-crowdfunding-backend/transaction"
 	"startup-crowdfunding-backend/user"
 	"strings"
@@ -28,8 +29,9 @@ func main() {
 	campaignService := campaign.NewService(campaignRepository)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
+	paymentService := payment.NewService(viperConfig)
 	transactionRepository := transaction.NewRepository(db)
-	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	router := gin.Default()
