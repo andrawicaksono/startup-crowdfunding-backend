@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"startup-crowdfunding-backend/user"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type Transaction struct {
 	Amount     int
 	Status     string
 	Code       string
+	User       user.User
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
